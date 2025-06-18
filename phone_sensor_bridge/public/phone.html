@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor Bridge - Mobile Interface</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 10px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        .status {
+            padding: 5px 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            font-size: 0.8em;
+        }
+        .connected { background-color: #d4edda; color: #155724; }
+        .disconnected { background-color: #f8d7da; color: #721c24; }
+        button {
+            padding: 8px 16px;
+            font-size: 0.9em;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .start { background-color: #28a745; color: white; }
+        .stop { background-color: #dc3545; color: white; }
+        #sensorInfo {
+            font-size: 0.7em;
+            text-align: left;
+            margin-top: 10px;
+            width: 90%;
+            overflow-x: auto;
+        }
+        @media (min-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+            .status {
+                font-size: 1em;
+            }
+            button {
+                padding: 10px 20px;
+                font-size: 1em;
+            }
+            #sensorInfo {
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Phone Sensor Streamer</h1>
+    <div id="status" class="status disconnected">Disconnected</div>
+    <button id="startBtn" class="start">Start</button>
+    <button id="stopBtn" class="stop" style="display:none;">Stop</button>
+    <div id="sensorInfo"></div>
+
+    <script>
+        let ws = null;
+        let streaming = false;
+        let sensorData = {};
+        
+        const statusDiv = document.getElementById('status');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const sensorInfo = document.getElementById('sensorInfo');
+        
+        const SERVER_IP = '192.168.1.11';
+        const WS_PORT = 3000;
+
+        function connectWebSocket() {
+            const wsUrl = `wss://${SERVER_IP}:${WS_PORT}`;
+            ws = new WebSocket(wsUrl);
+            ws.onopen = () => {
+                statusDiv.textContent = 'Connected';
+                statusDiv.className = 'status connected';
+            };
+            ws.onclose = () => {
+                statusDiv.textContent = 'Disconnected';
+                statusDiv.className = 'status disconnected';
+            };
+            ws.onerror = () => {
+                statusDiv.textContent = 'Error';
+                statusDiv.className = 'status disconnected';
+            };
+        }
+
+        async function startSensors() {
+            try {
+                streaming = true;
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'inline-block';
+
+                if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                    const motionPermission = await DeviceMotionEvent.requestPermission();
+                    if (motionPermission !== 'granted') throw new Error('Permission denied');
+                }
+                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    const orientationPermission = await DeviceOrientationEvent.requestPermission();
+                    if (orientationPermission !== 'granted') throw new Error('Permission denied');
+                }
+
+                window.addEventListener('devicemotion', handleMotion);
+                window.addEventListener('deviceorientation', handleOrientation);
+
+                if (navigator.geolocation) {
+                    navigator.geolocation.watchPosition(handleGPS, () => {}, { enableHighAccuracy: true });
+                }
+
+                setInterval(sendSensorData, 200);
+            } catch (error) {
+                alert('Error: ' + error.message);
+                stopSensors();
+            }
+        }
+
+        function stopSensors() {
+            streaming = false;
+            startBtn.style.display = 'inline-block';
+            stopBtn.style.display = 'none';
+            window.removeEventListener('devicemotion', handleMotion);
+            window.removeEventListener('deviceorientation', handleOrientation);
+        }
+
+        function handleMotion(event) {
+            if (!streaming) return;
+            sensorData.accelerometer = {
+                x: event.acceleration?.x || 0,
+                y: event.acceleration?.y || 0,
+                z: event.acceleration?.z || 0
+            };
+            sensorData.gyroscope = {
+                x: event.rotationRate?.alpha || 0,
+                y: event.rotationRate?.beta || 0,
+                z: event.rotationRate?.gamma || 0
+            };
+        }
+
+        function handleOrientation(event) {
+            if (!streaming) return;
+            sensorData.orientation = {
+                alpha: event.alpha,
+                beta: event.beta,
+                gamma: event.gamma
+            };
+        }
+
+        function handleGPS(position) {
+            if (!streaming) return;
+            sensorData.gps = {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                altitude: position.coords.altitude,
+                accuracy: position.coords.accuracy
+            };
+        }
+
+        function sendSensorData() {
+            if (!streaming || !ws || ws.readyState !== WebSocket.OPEN) return;
+            const dataToSend = { ...sensorData, timestamp: new Date().toISOString() };
+            ws.send(JSON.stringify(dataToSend));
+            sensorInfo.innerHTML = `<pre>${JSON.stringify(dataToSend, null, 2)}</pre>`;
+        }
+
+        startBtn.addEventListener('click', async () => {
+            connectWebSocket();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            if (ws && ws.readyState === WebSocket.OPEN) await startSensors();
+        });
+
+        stopBtn.addEventListener('click', stopSensors);
+    </script>
+</body>
+</html>

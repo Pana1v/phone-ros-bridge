@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📋 Sensor Logs</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .log-file {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .log-file a {
+            background: #007bff;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .log-file a:hover { background: #0056b3; }
+        .no-logs {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="nav">
+            <a href="/">📊 Dashboard</a>
+            <a href="/phone">📱 Phone Streamer</a>
+            <a href="/analytics">📈 Analytics</a>
+            <a href="/logs">📋 Logs</a>
+        </nav>
+        
+        <h1>📋 Sensor Data Logs</h1>
+        
+        <div id="log-list">
+            <div class="no-logs">📁 Loading log files...</div>
+        </div>
+    </div>
+
+    <script>
+        // Load log files
+        fetch('/api/logs')
+            .then(response => response.json())
+            .then(files => {
+                const logList = document.getElementById('log-list');
+                
+                if (files.length === 0) {
+                    logList.innerHTML = '<div class="no-logs">📁 No log files available yet. Start streaming sensor data to generate logs.</div>';
+                } else {
+                    logList.innerHTML = files.map(file => `
+                        <div class="log-file">
+                            <div>
+                                <strong>${file}</strong>
+                                <div style="font-size: 12px; color: #666;">Sensor data log file</div>
+                            </div>
+                            <a href="/api/logs/${file}" download>Download</a>
+                        </div>
+                    `).join('');
+                }
+            })
+            .catch(error => {
+                document.getElementById('log-list').innerHTML = '<div class="no-logs">❌ Error loading log files</div>';
+            });
+    </script>
+</body>
+</html>

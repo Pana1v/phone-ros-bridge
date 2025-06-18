@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Phone Sensor Dashboard</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <style>
+        /* Optimized compact layout */
+        .visualization-map-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .visualization-container, .map-container {
+            min-height: 400px;
+            border: 2px solid var(--primary-green);
+            border-radius: 8px;
+            box-shadow: var(--glow);
+            background: var(--secondary-bg);
+            position: relative;
+            padding: 12px;
+        }
+        .visualization-container::before {
+            content: '> 3D_VISUALIZATION';
+            position: absolute;
+            top: -12px;
+            left: 15px;
+            background: var(--primary-bg);
+            padding: 0 8px;
+            font-size: 11px;
+            color: var(--primary-green);
+            font-weight: 500;
+        }
+        .map-container::before {
+            content: '> GPS_MAP';
+            position: absolute;
+            top: -12px;
+            left: 15px;
+            background: var(--primary-bg);
+            padding: 0 8px;
+            font-size: 11px;
+            color: var(--primary-green);
+            font-weight: 500;
+        }
+        .canvas-container {
+            width: 100%;
+            height: 320px;
+            background: var(--primary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        #imu-3d-canvas {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+            cursor: grab;
+        }
+        #map {
+            width: 100%;
+            height: 320px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+        .gps-info {
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        /* Compact camera section */
+        .camera-container {
+            margin: 15px 0;
+            background: var(--secondary-bg);
+            border: 2px solid var(--primary-green);
+            border-radius: 8px;
+            padding: 12px;
+            position: relative;
+        }
+        .camera-container::before {
+            content: '> PHONE_CAMERA';
+            position: absolute;
+            top: -12px;
+            left: 15px;
+            background: var(--primary-bg);
+            padding: 0 8px;
+            font-size: 11px;
+            color: var(--primary-green);
+            font-weight: 500;
+        }
+        .camera-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .camera-controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .camera-info {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+        .camera-stream-container {
+            position: relative;
+            min-height: 200px;
+            background: var(--primary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .camera-stream-container::before {
+            content: "📷 Camera stream will appear here";
+            color: var(--text-secondary);
+            font-size: 14px;
+            position: absolute;
+            z-index: 1;
+        }
+        #phone-camera-stream {
+            width: 100%;
+            max-height: 250px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            z-index: 2;
+        }
+        #phone-camera {
+            width: 100%;
+            max-height: 250px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            z-index: 2;
+        }
+        /* Compact sensor grid */
+        .sensor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+            margin: 15px 0;
+        }
+        .sensor-card {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px;
+            position: relative;
+        }
+        .sensor-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--primary-green);
+        }
+        .sensor-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+            font-size: 12px;
+        }
+        .orientation-values {
+            display: flex;
+            gap: 15px;
+            margin: 8px 0;
+            font-size: 12px;
+        }
+        .visualization-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        .viz-btn {
+            padding: 4px 8px;
+            font-size: 11px;
+            border: 1px solid var(--primary-green);
+            background: transparent;
+            color: var(--primary-green);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .viz-btn:hover {
+            background: var(--primary-green);
+            color: var(--primary-bg);
+        }
+        /* Compass styles */
+        .canvas-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            pointer-events: none;
+        }
+        .compass {
+            width: 60px;
+            height: 60px;
+            border: 2px solid var(--primary-green);
+            border-radius: 50%;
+            position: relative;
+            background: rgba(0, 0, 0, 0.7);
+        }
+        .compass-needle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px;
+            height: 20px;
+            background: var(--primary-green);
+            transform-origin: bottom center;
+            transform: translate(-50%, -100%);
+            transition: transform 0.3s ease;
+        }
+        .compass-labels {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            font-size: 10px;
+            color: var(--primary-green);
+        }
+        .compass-n { position: absolute; top: 2px; left: 50%; transform: translateX(-50%); }
+        .compass-e { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); }
+        .compass-s { position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); }
+        .compass-w { position: absolute; left: 2px; top: 50%; transform: translateY(-50%); }
+        
+        @media (max-width: 768px) {
+            .visualization-map-container {
+                grid-template-columns: 1fr;
+            }
+            .canvas-container, #map {
+                height: 250px;
+            }
+            .sensor-grid {
+                grid-template-columns: 1fr;
+            }
+            .camera-header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Enhanced Navigation -->
+        <nav class="nav">
+            <div class="nav-brand">
+                <span class="nav-logo">📱</span>
+                <span class="nav-title">Sensor Dashboard</span>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link active">📊 Dashboard</a>
+                <a href="/phone" class="nav-link">📱 Phone Streamer</a>
+                <a href="/analytics" class="nav-link">📈 Analytics</a>
+                <a href="/logs" class="nav-link">📋 Logs</a>
+                <a href="/test" class="nav-link">🔧 Test</a>
+            </div>
+            <div class="nav-status">
+                <div id="connection-indicator" class="connection-indicator"></div>
+                <span id="connection-text">Disconnected</span>
+            </div>
+        </nav>
+        
+        <!-- Compact Header -->
+        <header class="dashboard-header">
+            <h1>Phone Sensor Dashboard</h1>
+            <div class="header-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Status:</span>
+                    <span id="status" class="stat-value disconnected">🔴 Disconnected</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Data Rate:</span>
+                    <span id="header-data-rate" class="stat-value">0 Hz</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Latency:</span>
+                    <span id="header-latency" class="stat-value">-- ms</span>
+                </div>
+            </div>
+        </header>
+        
+        <!-- System Stats -->
+        <div id="stats" class="stats-card" style="display: none;">
+            <h3>System Status</h3>
+            <div id="stats-content">Loading...</div>
+        </div>
+        
+        <!-- 3D Visualization and GPS Map Side by Side -->
+        <div class="visualization-map-container">
+            <div class="visualization-container">
+                <div class="visualization-header">
+                    <h3>🎯 3D Orientation</h3>
+                    <div class="orientation-values">
+                        <div class="orientation-item">
+                            <span class="orientation-label">Roll:</span>
+                            <span id="roll-display" class="orientation-value">0°</span>
+                        </div>
+                        <div class="orientation-item">
+                            <span class="orientation-label">Pitch:</span>
+                            <span id="pitch-display" class="orientation-value">0°</span>
+                        </div>
+                        <div class="orientation-item">
+                            <span class="orientation-label">Yaw:</span>
+                            <span id="yaw-display" class="orientation-value">0°</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="imu-3d-canvas"></canvas>
+                    <div class="canvas-overlay">
+                        <div class="orientation-indicator">
+                            <div class="compass">
+                                <div id="compass-needle" class="compass-needle"></div>
+                                <div class="compass-labels">
+                                    <span class="compass-n">N</span>
+                                    <span class="compass-e">E</span>
+                                    <span class="compass-s">S</span>
+                                    <span class="compass-w">W</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="visualization-controls">
+                    <button id="reset-camera" class="viz-btn">🔄 Reset</button>
+                    <button id="toggle-wireframe" class="viz-btn">📐 Wire</button>
+                    <button id="toggle-axes" class="viz-btn">📏 Axes</button>
+                    <button id="toggle-animation" class="viz-btn">⏸️ Pause</button>
+                </div>
+            </div>
+            
+            <div class="map-container">
+                <div class="visualization-header">
+                    <h3>🗺️ GPS Location</h3>
+                    <div class="orientation-values">
+                        <div class="orientation-item">
+                            <span class="orientation-label">Lat:</span>
+                            <span id="map-lat" class="orientation-value">--</span>
+                        </div>
+                        <div class="orientation-item">
+                            <span class="orientation-label">Lon:</span>
+                            <span id="map-lon" class="orientation-value">--</span>
+                        </div>
+                        <div class="orientation-item">
+                            <span class="orientation-label">Accuracy:</span>
+                            <span id="map-accuracy" class="orientation-value">--</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="map"></div>
+                <div class="gps-info">
+                    <span>Alt: <span id="map-altitude">--</span>m</span>
+                    <span>Speed: <span id="map-speed">--</span> m/s</span>
+                    <span>Heading: <span id="map-heading">--</span>°</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Camera Stream (Above Sensor Cards) -->
+        <div class="camera-container">
+            <div class="camera-header">
+                <h3>📷 Phone Camera Stream (WebSocket)</h3>
+                <div class="camera-controls">
+                    <button id="phone-camera-toggle" class="viz-btn">▶️ Start WebSocket Stream</button>
+                    <button id="phone-camera-snapshot" class="viz-btn">📸 Snapshot</button>
+                </div>
+            </div>
+            <div class="camera-info">
+                <span id="phone-camera-status">Click Start to receive WebSocket camera frames...</span>
+                <span>Source: Phone WebSocket</span>
+            </div>
+            <div class="camera-stream-container">
+                <!-- This displays WebSocket frames, not local camera -->
+                <img id="phone-camera-stream" 
+                    style="display: none; width: 100%; max-height: 300px; object-fit: cover;"
+                    alt="Phone WebSocket camera stream">
+            </div>
+        </div>
+        
+        <!-- Compact Sensor Grid -->
+        <div class="sensor-grid">
+            <!-- Accelerometer Card -->
+            <div class="sensor-card">
+                <div class="sensor-title">🏃 Accelerometer</div>
+                <div class="sensor-data">
+                    <div class="sensor-row">
+                        <span class="sensor-label">X:</span>
+                        <span id="accel-x" class="sensor-value">--</span>
+                        <span class="sensor-unit">m/s²</span>
+                    </div>
+                    <div class="sensor-row">
+                        <span class="sensor-label">Y:</span>
+                        <span id="accel-y" class="sensor-value">--</span>
+                        <span class="sensor-unit">m/s²</span>
+                    </div>
+                    <div class="sensor-row">
+                        <span class="sensor-label">Z:</span>
+                        <span id="accel-z" class="sensor-value">--</span>
+                        <span class="sensor-unit">m/s²</span>
+                    </div>
+                    <div class="sensor-row highlight">
+                        <span class="sensor-label">Magnitude:</span>
+                        <span id="accel-mag" class="sensor-value">--</span>
+                        <span class="sensor-unit">m/s²</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gyroscope Card -->
+            <div class="sensor-card">
+                <div class="sensor-title">🌀 Gyroscope</div>
+                <div class="sensor-data">
+                    <div class="sensor-row">
+                        <span class="sensor-label">X:</span>
+                        <span id="gyro-x" class="sensor-value">--</span>
+                        <span class="sensor-unit">rad/s</span>
+                    </div>
+                    <div class="sensor-row">
+                        <span class="sensor-label">Y:</span>
+                        <span id="gyro-y" class="sensor-value">--</span>
+                        <span class="sensor-unit">rad/s</span>
+                    </div>
+                    <div class="sensor-row">
+                        <span class="sensor-label">Z:</span>
+                        <span id="gyro-z" class="sensor-value">--</span>
+                        <span class="sensor-unit">rad/s</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GPS Location Card -->
+            <div class="sensor-card">
+                <div class="sensor-title">🗺️ GPS Data</div>
+                <div class="sensor-data">
+                    <div class="sensor-row">
+                        <span class="sensor-label">Latitude:</span>
+                        <span id="gps-lat" class="sensor-value">--</span>
+                        <span class="sensor-unit">°</span>
+                    </div>
+                    <div class="sensor-row">
+                        <span class="sensor-label">Longitude:</span>
+                        <span id="gps-lon" class="sensor-value">--</span>
+                        <span class="sensor-unit">°</span>
+                    </div>
+                    <div class="sensor-row">
+                        <span class="sensor-label">Altitude:</span>
+                        <span id="gps-alt" class="sensor-value">--</span>
+                        <span class="sensor-unit">m</span>
+                    </div>
+                    <div class="sensor-row">
+                        <span class="sensor-label">Accuracy:</span>
+                        <span id="gps-acc" class="sensor-value">--</span>
+                        <span class="sensor-unit">m</span>
+                    </div>
+                    <div class="sensor-row">
+                        <span class="sensor-label">Speed:</span>
+                        <span id="gps-speed" class="sensor-value">--</span>
+                        <span class="sensor-unit">m/s</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orientation Card -->
+            <div class="sensor-card">
+                <div class="sensor-title">📱 Orientation</div>
+                <div class="sensor-data">
+                    <div class="sensor-row">
+                        <span class="sensor-label">Alpha:</span>
+                        <span id="orient-alpha" class="sensor-value">--</span>
+                        <span class="sensor-unit">°</span>
+                    </div>
+                    <div class="sensor-row">
+                        <span class="sensor-label">Beta:</span>
+                        <span id="orient-beta" class="sensor-value">--</span>
+                        <span class="sensor-unit">°</span>
+                    </div>
+                    <div class="sensor-row">
+                        <span class="sensor-label">Gamma:</span>
+                        <span id="orient-gamma" class="sensor-value">--</span>
+                        <span class="sensor-unit">°</span>
+                    </div>
+                    <div class="sensor-row">
+                        <span class="sensor-label">Absolute:</span>
+                        <span id="orient-absolute" class="sensor-value">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Battery Card -->
+            <div class="sensor-card">
+                <div class="sensor-title">🔋 Battery</div>
+                <div class="sensor-data">
+                    <div class="sensor-row">
+                        <span class="sensor-label">Level:</span>
+                        <span id="battery-level" class="sensor-value">--</span>
+                        <span class="sensor-unit">%</span>
+                    </div>
+                    <div class="sensor-row">
+                        <span class="sensor-label">Charging:</span>
+                        <span id="battery-charging" class="sensor-value">--</span>
+                    </div>
+                    <div class="sensor-row">
+                        <span class="sensor-label">Time:</span>
+                        <span id="battery-time" class="sensor-value">--</span>
+                        <span class="sensor-unit">min</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Device Info Card -->
+            <div class="sensor-card">
+                <div class="sensor-title">📱 Device Info</div>
+                <div class="sensor-data">
+                    <div class="sensor-row">
+                        <span class="sensor-label">Platform:</span>
+                        <span id="device-platform" class="sensor-value">--</span>
+                    </div>
+                    <div class="sensor-row">
+                        <span class="sensor-label">CPU Cores:</span>
+                        <span id="device-cores" class="sensor-value">--</span>
+                    </div>
+                    <div class="sensor-row">
+                        <span class="sensor-label">Memory:</span>
+                        <span id="device-memory" class="sensor-value">--</span>
+                        <span class="sensor-unit">MB</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Card -->
+            <div class="sensor-card">
+                <div class="sensor-title">⚡ Performance</div>
+                <div class="sensor-data">
+                    <div class="sensor-row">
+                        <span class="sensor-label">Latency:</span>
+                        <span id="perf-latency" class="sensor-value">--</span>
+                        <span class="sensor-unit">ms</span>
+                    </div>
+                    <div class="sensor-row">
+                        <span class="sensor-label">Packets:</span>
+                        <span id="perf-packets" class="sensor-value">--</span>
+                    </div>
+                    <div class="sensor-row">
+                        <span class="sensor-label">Timestamp:</span>
+                        <span id="timestamp" class="sensor-value">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Network Card -->
+            <div class="sensor-card">
+                <div class="sensor-title">📶 Network</div>
+                <div class="sensor-data">
+                    <div class="sensor-row">
+                        <span class="sensor-label">Type:</span>
+                        <span id="network-type" class="sensor-value">--</span>
+                    </div>
+                    <div class="sensor-row">
+                        <span class="sensor-label">Speed:</span>
+                        <span id="network-speed" class="sensor-value">--</span>
+                        <span class="sensor-unit">Mbps</span>
+                    </div>
+                    <div class="sensor-row">
+                        <span class="sensor-label">RTT:</span>
+                        <span id="network-rtt" class="sensor-value">--</span>
+                        <span class="sensor-unit">ms</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Compact Latency Display -->
+        <div id="latency-display" class="latency-display">
+            <span class="latency-label">LATENCY:</span>
+            <span id="latency-value">--ms</span>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/dashboard-core.js"></script>
+    <script src="/js/dashboard-3d.js"></script>
+    <script src="/js/dashboard-sensors.js"></script>
+    <script src="/js/dashboard-maps-camera.js"></script>
+</body>
+</html>

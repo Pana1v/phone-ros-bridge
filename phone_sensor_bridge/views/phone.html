@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📱 Phone Sensor Streamer</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 450px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+        
+        .phone-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .phone-header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px var(--primary-green);
+        }
+        
+        .connection-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--error-red);
+            animation: pulse 1s infinite;
+        }
+        
+        .status-indicator.connected {
+            background: var(--primary-green);
+        }
+        
+        .permission-info {
+            background: rgba(255, 193, 7, 0.15);
+            border: 1px solid rgba(255, 193, 7, 0.4);
+            padding: 15px;
+            border-radius: 12px;
+            margin: 15px 0;
+            font-size: 13px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .control-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .control-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .sensor-preview {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .sensor-preview h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: var(--primary-green);
+        }
+        
+        .sensor-grid-mini {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 12px;
+        }
+        
+        .sensor-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        .sensor-label {
+            display: block;
+            font-size: 10px;
+            opacity: 0.8;
+            margin-bottom: 2px;
+        }
+        
+        .sensor-value-mini {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: bold;
+            color: var(--primary-green);
+        }
+        
+        .camera-controls {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .camera-preview {
+            width: 100%;
+            height: 200px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.5);
+            margin-bottom: 10px;
+            object-fit: cover;
+        }
+        
+        .camera-switch {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .camera-switch button {
+            padding: 8px 16px;
+            background: rgba(0, 255, 65, 0.2);
+            border: 1px solid var(--primary-green);
+            color: var(--primary-green);
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .stats-display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            text-align: center;
+        }
+        
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 5px;
+            border-radius: 6px;
+        }
+        
+        .stat-value {
+            display: block;
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary-green);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+        
+        .sensor-info {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 20px;
+            text-align: left;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .sensor-info pre {
+            font-size: 10px;
+            line-height: 1.3;
+            color: #e8f5e8;
+            margin: 0;
+        }
+        
+        .nav {
+            background: rgba(255, 255, 255, 0.1) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            margin-bottom: 20px;
+        }
+        
+        .nav a {
+            color: white !important;
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+                max-width: 100%;
+            }
+            
+            .sensor-grid-mini {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            
+            .control-buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .camera-preview {
+                height: 150px;
+            }
+            
+            .sensor-info {
+                max-height: 200px;
+            }
+        }
+        
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+        }
+        
+        .streaming .status-indicator {
+            animation: pulse 0.5s infinite;
+        }
+        
+        .sensor-item.active {
+            background: rgba(0, 255, 65, 0.2);
+            border: 1px solid rgba(0, 255, 65, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="nav">
+            <a href="/">📊 Dashboard</a>
+            <a href="/phone">📱 Streamer</a>
+            <a href="/analytics">📈 Analytics</a>
+            <a href="/logs">📋 Logs</a>
+        </nav>
+        
+        <div class="phone-header">
+            <h1>Phone Sensor Streamer</h1>
+            <div class="connection-status">
+                <div id="status-indicator" class="status-indicator"></div>
+                <span id="status-text">Disconnected</span>
+            </div>
+        </div>
+        
+        <div class="permission-info">
+            ⚠️ <strong>Permissions Required:</strong><br>
+            This app needs access to device sensors, camera, and location.
+            Please allow when prompted for the best experience.
+        </div>
+        
+        <div class="control-panel">
+            <div class="control-buttons">
+                <button id="startBtn" class="btn start">🚀 Start Streaming</button>
+                <button id="stopBtn" class="btn stop" style="display:none;">⏹️ Stop Streaming</button>
+            </div>
+            
+            <!-- Real-time Sensor Preview -->
+            <div class="sensor-preview">
+                <h3>📊 Live Sensor Data</h3>
+                <div class="sensor-grid-mini">
+                    <div class="sensor-item" id="accel-preview">
+                        <span class="sensor-label">Accelerometer</span>
+                        <span class="sensor-value-mini" id="accel-magnitude">0.0</span>
+                    </div>
+                    <div class="sensor-item" id="gyro-preview">
+                        <span class="sensor-label">Gyroscope</span>
+                        <span class="sensor-value-mini" id="gyro-magnitude">0.0</span>
+                    </div>
+                    <div class="sensor-item" id="orient-preview">
+                        <span class="sensor-label">Orientation</span>
+                        <span class="sensor-value-mini" id="orient-alpha">0°</span>
+                    </div>
+                    <div class="sensor-item" id="gps-preview">
+                        <span class="sensor-label">GPS</span>
+                        <span class="sensor-value-mini" id="gps-accuracy">--</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Camera Controls -->
+            <div class="camera-controls">
+                <h3>📷 Camera Stream</h3>
+                <video id="camera-preview" class="camera-preview" autoplay muted playsinline></video>
+                <div class="camera-switch">
+                    <span id="camera-status">Camera Off</span>
+                    <button id="switch-camera">Turn On Camera</button>
+                </div>
+            </div>
+            
+            <!-- Statistics Display -->
+            <div class="stats-display">
+                <h3>📈 Performance Stats</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value" id="data-rate">0</span>
+                        <div class="stat-label">Data Rate (Hz)</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="packet-count">0</span>
+                        <div class="stat-label">Packets Sent</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="latency-stat">--</span>
+                        <div class="stat-label">Latency (ms)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Detailed Sensor Info -->
+        <div id="sensorInfo" class="sensor-info">
+            <strong>📋 Detailed Sensor Data:</strong>
+            <pre id="sensor-details">Waiting for sensor data...</pre>
+        </div>
+        
+        <!-- Connection Status -->
+        <div id="status" class="status disconnected" style="display: none;">🔴 Disconnected</div>
+        
+        <!-- Latency Display -->
+        <div id="latency-display" class="latency-display" style="position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.7); padding: 5px 10px; border-radius: 5px; font-size: 12px;">
+            <span>PING: </span><span id="latency-value">--ms</span>
+        </div>
+    </div>
+
+    <script src="/js/phone.js"></script>
+    
+    <script>
+        // Enhanced UI updates for the new layout
+        function updatePreviewData(data) {
+            // Update accelerometer preview
+            if (data.accelerometer) {
+                const mag = Math.sqrt(
+                    (data.accelerometer.x || 0) ** 2 + 
+                    (data.accelerometer.y || 0) ** 2 + 
+                    (data.accelerometer.z || 0) ** 2
+                ).toFixed(1);
+                document.getElementById('accel-magnitude').textContent = mag;
+                document.getElementById('accel-preview').classList.add('active');
+            }
+            
+            // Update gyroscope preview
+            if (data.gyroscope) {
+                const mag = Math.sqrt(
+                    (data.gyroscope.x || 0) ** 2 + 
+                    (data.gyroscope.y || 0) ** 2 + 
+                    (data.gyroscope.z || 0) ** 2
+                ).toFixed(1);
+                document.getElementById('gyro-magnitude').textContent = mag;
+                document.getElementById('gyro-preview').classList.add('active');
+            }
+            
+            // Update orientation preview
+            if (data.orientation) {
+                document.getElementById('orient-alpha').textContent = 
+                    (data.orientation.alpha || 0).toFixed(0) + '°';
+                document.getElementById('orient-preview').classList.add('active');
+            }
+            
+            // Update GPS preview
+            if (data.gps) {
+                document.getElementById('gps-accuracy').textContent = 
+                    (data.gps.accuracy || 0).toFixed(0) + 'm';
+                document.getElementById('gps-preview').classList.add('active');
+            }
+            
+            // Update stats
+            if (data.dataCount) {
+                document.getElementById('packet-count').textContent = data.dataCount;
+            }
+            
+            if (data.clientLatency) {
+                document.getElementById('latency-stat').textContent = 
+                    data.clientLatency.toFixed(0);
+            }
+        }
+        
+        // Update status indicator
+        function updateConnectionStatus(connected) {
+            const indicator = document.getElementById('status-indicator');
+            const text = document.getElementById('status-text');
+            
+            if (connected) {
+                indicator.classList.add('connected');
+                text.textContent = 'Connected';
+                document.body.classList.add('streaming');
+            } else {
+                indicator.classList.remove('connected');
+                text.textContent = 'Disconnected';
+                document.body.classList.remove('streaming');
+            }
+        }
+        
+        // Calculate and display data rate
+        let lastDataTime = 0;
+        let dataRateCounter = 0;
+        
+        function updateDataRate() {
+            const now = Date.now();
+            if (now - lastDataTime >= 1000) {
+                document.getElementById('data-rate').textContent = dataRateCounter;
+                dataRateCounter = 0;
+                lastDataTime = now;
+            }
+            dataRateCounter++;
+        }
+        
+        // Override the original sensor info update to include preview
+        const originalSensorInfo = window.sensorInfo;
+        if (originalSensorInfo) {
+            const newSensorInfo = originalSensorInfo.cloneNode(true);
+            newSensorInfo.addEventListener('DOMSubtreeModified', function() {
+                const content = this.innerHTML;
+                if (content.includes('{')) {
+                    try {
+                        const data = JSON.parse(content.replace('<pre>', '').replace('</pre>', ''));
+                        updatePreviewData(data);
+                        updateDataRate();
+                    } catch (e) {
+                        // Ignore parse errors
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

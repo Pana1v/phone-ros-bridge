@@ -1,0 +1,604 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+
+:root {
+    --primary-bg: #0a0a0a;
+    --secondary-bg: #1a1a1a;
+    --accent-bg: #2a2a2a;
+    --primary-green: #00ff41;
+    --white: #ffffff;
+    --secondary-green: #00cc33;
+    --warning-amber: #ffb000;
+    --error-red: #ff3333;
+    --text-primary: #00ff41;
+    --text-secondary: #cccccc;
+    --text-muted: #666666;
+    --border-color: #333333;
+    --glow: 0 0 5px var(--primary-green);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'JetBrains Mono', monospace;
+    margin: 0;
+    padding: 10px;
+    background: var(--primary-bg);
+    color: var(--text-primary);
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+.container {
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+/* Compact Navigation */
+.nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--secondary-bg);
+    border: 1px solid var(--primary-green);
+    border-radius: 4px;
+    padding: 8px 15px;
+    margin-bottom: 10px;
+    box-shadow: var(--glow);
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-logo {
+    font-size: 18px;
+}
+
+.nav-title {
+    font-weight: bold;
+    color: var(--primary-green);
+    font-size: 14px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 8px;
+}
+
+.nav-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    font-size: 11px;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: var(--primary-green);
+    background: rgba(0, 255, 65, 0.1);
+    border-color: var(--primary-green);
+}
+
+.nav-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+}
+
+.connection-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--error-red);
+}
+
+.connection-indicator.connected {
+    background: var(--primary-green);
+}
+
+/* Compact Header */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.dashboard-header h1 {
+    margin: 0;
+    font-size: 20px;
+    color: var(--white);
+}
+
+.header-stats {
+    display: flex;
+    gap: 10px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 8px;
+    background: rgba(0, 255, 65, 0.1);
+    border-radius: 4px;
+    border: 1px solid rgba(0, 255, 65, 0.3);
+    min-width: 60px;
+}
+
+.stat-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.stat-value {
+    font-weight: bold;
+    color: var(--primary-green);
+    font-size: 11px;
+}
+
+/* Compact Stats Card */
+.stats-card {
+    background: var(--secondary-bg);
+    border: 1px solid var(--white);
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-shadow: var(--glow);
+}
+
+.stats-card h3 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    color: var(--white);
+}
+
+#stats-content {
+    font-size: 11px;
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+/* Compact 3D Visualization */
+.visualization-container {
+    background: var(--secondary-bg);
+    border: 1px solid var(--white);
+    border-radius: 4px;
+    padding: 10px;
+    margin: 10px 0;
+    box-shadow: var(--glow);
+}
+
+.visualization-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.visualization-header h3 {
+    margin: 0;
+    color: var(--white);
+    font-size: 14px;
+}
+
+.orientation-values {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.orientation-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0, 255, 65, 0.1);
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 255, 65, 0.3);
+}
+
+.orientation-label {
+    font-size: 10px;
+    color: var(--text-secondary);
+}
+
+.orientation-value {
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--white);
+}
+
+.canvas-container {
+    width: 100%;
+    height: 250px;
+    background: var(--primary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+
+.canvas-overlay {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    pointer-events: none;
+}
+
+.compass {
+    width: 60px;
+    height: 60px;
+    border: 1px solid var(--white);
+    border-radius: 50%;
+    position: relative;
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.compass-needle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1px;
+    height: 20px;
+    background: var(--white);
+    transform-origin: bottom center;
+    transform: translate(-50%, -100%);
+    transition: transform 0.3s ease;
+}
+
+.compass-n, .compass-e, .compass-s, .compass-w {
+    position: absolute;
+    font-size: 10px;
+    color: var(--white);
+    font-weight: bold;
+}
+
+.compass-n { top: 2px; left: 50%; transform: translateX(-50%); }
+.compass-e { right: 2px; top: 50%; transform: translateY(-50%); }
+.compass-s { bottom: 2px; left: 50%; transform: translateX(-50%); }
+.compass-w { left: 2px; top: 50%; transform: translateY(-50%); }
+
+.visualization-controls {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.viz-btn {
+    padding: 4px 8px;
+    background: rgba(0, 255, 65, 0.1);
+    border: 1px solid var(--white);
+    color: var(--white);
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 10px;
+    transition: all 0.2s ease;
+}
+
+.viz-btn:hover {
+    background: rgba(0, 255, 65, 0.2);
+}
+
+/* Compact Camera Container */
+.camera-container {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0;
+    flex-wrap: wrap;
+}
+
+.camera-stream {
+    flex: 1 1 250px;
+    background: var(--secondary-bg);
+    border: 1px solid var(--white);
+    border-radius: 4px;
+    padding: 8px;
+    box-shadow: var(--glow);
+    text-align: center;
+}
+
+.camera-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.camera-header h3 {
+    margin: 0;
+    color: var(--white);
+    font-size: 12px;
+}
+
+.camera-controls {
+    display: flex;
+    gap: 4px;
+}
+
+.camera-btn {
+    padding: 3px 6px;
+    background: rgba(0, 255, 65, 0.1);
+    border: 1px solid var(--white);
+    color: var(--white);
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 9px;
+    transition: all 0.2s ease;
+}
+
+.camera-btn:hover {
+    background: rgba(0, 255, 65, 0.2);
+}
+
+.camera-stream video {
+    width: 100%;
+    height: 120px;
+    border-radius: 3px;
+    background: var(--primary-bg);
+    border: 1px solid var(--border-color);
+    object-fit: cover;
+}
+
+.camera-info {
+    margin-top: 4px;
+    font-size: 9px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.camera-status {
+    padding: 2px 4px;
+    border-radius: 2px;
+    font-size: 9px;
+}
+
+.camera-status.active {
+    background: rgba(0, 255, 65, 0.2);
+    color: var(--white);
+}
+
+.camera-status.disconnected {
+    background: rgba(255, 51, 51, 0.2);
+    color: var(--error-red);
+}
+
+/* Compact Sensor Grid */
+.sensor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.sensor-card {
+    background: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--white);
+    border-radius: 4px;
+    padding: 8px;
+    transition: all 0.2s ease;
+}
+
+.sensor-card:hover {
+    border-color: var(--primary-green);
+    box-shadow: 0 0 8px rgba(0, 255, 65, 0.3);
+}
+
+.sensor-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--primary-green);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sensor-data {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.sensor-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 0;
+}
+
+.sensor-row.highlight {
+    background: rgba(0, 255, 65, 0.1);
+    padding: 4px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 255, 65, 0.3);
+}
+
+.sensor-label {
+    font-size: 10px;
+    color: var(--text-secondary);
+    min-width: 50px;
+}
+
+.sensor-value {
+    font-size: 12px;
+    color: var(--primary-green);
+    font-weight: 500;
+    text-align: right;
+    min-width: 40px;
+}
+
+.sensor-unit {
+    font-size: 9px;
+    color: var(--text-muted);
+    min-width: 25px;
+    text-align: right;
+}
+
+/* Motion Indicators */
+.motion-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 4px;
+}
+
+.motion-stationary { background-color: var(--primary-green); }
+.motion-walking { background-color: var(--warning-amber); }
+.motion-running { background-color: #ff6600; }
+.motion-vigorous { background-color: var(--error-red); }
+
+/* Compact Latency Display */
+.latency-display {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: var(--secondary-bg);
+    border: 1px solid var(--primary-green);
+    border-radius: 3px;
+    padding: 4px 8px;
+    font-size: 10px;
+    z-index: 1000;
+    box-shadow: var(--glow);
+}
+
+.latency-label {
+    color: var(--primary-green);
+    margin-right: 4px;
+}
+
+/* System Time Card */
+.system-time-card {
+    grid-column: 1 / -1;
+    background: var(--accent-bg);
+    border: 1px solid var(--primary-green);
+}
+
+.timestamp {
+    color: var(--text-muted);
+    font-size: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .sensor-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 6px;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 5px;
+        font-size: 11px;
+    }
+    
+    .nav {
+        flex-direction: column;
+        gap: 8px;
+        padding: 6px 10px;
+    }
+    
+    .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+    }
+    
+    .dashboard-header {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .header-stats {
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    
+    .sensor-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+    }
+    
+    .camera-container {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .camera-stream video {
+        height: 100px;
+    }
+    
+    .canvas-container {
+        height: 200px;
+    }
+    
+    .compass {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .compass-needle {
+        height: 15px;
+    }
+    
+    .compass-n, .compass-e, .compass-s, .compass-w {
+        font-size: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .sensor-grid {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+    
+    .orientation-values {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .visualization-controls {
+        gap: 4px;
+    }
+    
+    .viz-btn {
+        padding: 3px 6px;
+        font-size: 9px;
+    }
+    
+    .canvas-container {
+        height: 180px;
+    }
+}
+
+/* Performance optimizations for compact view */
+.sensor-card::before {
+    display: none; /* Remove scan animations for better performance */
+}
+
+.status::before {
+    display: none;
+}
+
+body {
+    animation: none; /* Remove flicker effect */
+}

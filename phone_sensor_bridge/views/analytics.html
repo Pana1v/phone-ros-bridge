@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📈 Sensor Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .chart-container { width: 40%;display: inline-block; margin: 1%; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .chart-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="nav">
+            <a href="/">📊 Dashboard</a>
+            <a href="/phone">📱 Phone Streamer</a>
+            <a href="/analytics">📈 Analytics</a>
+            <a href="/logs">📋 Logs</a>
+        </nav>
+        <h1>📈 Real-time Sensor Analytics</h1>
+        <div class="stats-card">
+            <h3>📊 Live Statistics</h3>
+            <div id="stats-content">Waiting for data...</div>
+        </div>
+        <div class="chart-container"><div class="chart-title">🏃 Accelerometer Data</div><canvas id="accelChart"></canvas></div>
+        <div class="chart-container"><div class="chart-title">🌀 Gyroscope Data</div><canvas id="gyroChart"></canvas></div>
+        <div class="chart-container"><div class="chart-title">📐 Orientation Data</div><canvas id="orientationChart"></canvas></div>
+        <div class="chart-container"><div class="chart-title">🎯 Motion Analysis</div><canvas id="motionChart"></canvas></div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/analytics.js"></script>
+</body>
+</html>

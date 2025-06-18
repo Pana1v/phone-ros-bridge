@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phone Sensor Data Stream</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .sensor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .sensor-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .sensor-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .sensor-value {
+            font-size: 24px;
+            color: #007bff;
+            margin: 5px 0;
+        }
+        .timestamp {
+            color: #666;
+            font-size: 12px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .connected { background-color: #d4edda; color: #155724; }
+        .disconnected { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Phone Sensor Data Stream</h1>
+        <div id="status" class="status disconnected">Disconnected</div>
+        
+        <div class="sensor-grid">
+            <div class="sensor-card">
+                <div class="sensor-title">Accelerometer</div>
+                <div>X: <span id="accel-x" class="sensor-value">--</span></div>
+                <div>Y: <span id="accel-y" class="sensor-value">--</span></div>
+                <div>Z: <span id="accel-z" class="sensor-value">--</span></div>
+            </div>
+            
+            <div class="sensor-card">
+                <div class="sensor-title">Gyroscope</div>
+                <div>X: <span id="gyro-x" class="sensor-value">--</span></div>
+                <div>Y: <span id="gyro-y" class="sensor-value">--</span></div>
+                <div>Z: <span id="gyro-z" class="sensor-value">--</span></div>
+            </div>
+            
+            <div class="sensor-card">
+                <div class="sensor-title">Magnetometer</div>
+                <div>X: <span id="mag-x" class="sensor-value">--</span></div>
+                <div>Y: <span id="mag-y" class="sensor-value">--</span></div>
+                <div>Z: <span id="mag-z" class="sensor-value">--</span></div>
+            </div>
+            
+            <div class="sensor-card">
+                <div class="sensor-title">GPS</div>
+                <div>Lat: <span id="gps-lat" class="sensor-value">--</span></div>
+                <div>Lon: <span id="gps-lon" class="sensor-value">--</span></div>
+                <div>Alt: <span id="gps-alt" class="sensor-value">--</span></div>
+            </div>
+            
+            <div class="sensor-card">
+                <div class="sensor-title">Environment</div>
+                <div>Light: <span id="light" class="sensor-value">--</span></div>
+                <div>Proximity: <span id="proximity" class="sensor-value">--</span></div>
+                <div>Pressure: <span id="pressure" class="sensor-value">--</span></div>
+            </div>
+            
+            <div class="sensor-card">
+                <div class="sensor-title">Orientation</div>
+                <div>Alpha: <span id="orient-alpha" class="sensor-value">--</span></div>
+                <div>Beta: <span id="orient-beta" class="sensor-value">--</span></div>
+                <div>Gamma: <span id="orient-gamma" class="sensor-value">--</span></div>
+            </div>
+        </div>
+        
+        <div class="sensor-card">
+            <div class="sensor-title">Last Update</div>
+            <div id="timestamp" class="timestamp">Never</div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="client.js"></script>
+</body>
+</html>
