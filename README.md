@@ -6,9 +6,11 @@ A server for collecting, processing, and visualizing sensor data from mobile pho
 - Real-time sensor data collection from mobile devices
 - WebSocket and REST API support
 - Data logging and analytics
-- 3D dashboard visualization ([Dashboard Preview](media/dashboard.gif))
+- 3D dashboard visualization 
 - SSL/TLS support
 - ROS (Robot Operating System) integration
+![Dashboard Preview](media/dashboard.gif)
+![Analytics Preview](media/analytics.gif)
 
 Note: Supported Version is ROS Humble, The server component can run on any platform that supports node.js and dependencies
 
@@ -95,7 +97,6 @@ Run the script:
 python3 preview_mjpeg_stream.py
 ```
 ![Phone Preview](media/phone.gif)
-[Phone Video](media/phone.mp4)
 
 ### Regenerating SSL Certificates
 To create new self-signed certificates (with proper SAN):
