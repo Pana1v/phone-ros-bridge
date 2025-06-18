@@ -6,7 +6,7 @@ A server for collecting, processing, and visualizing sensor data from mobile pho
 - Real-time sensor data collection from mobile devices
 - WebSocket and REST API support
 - Data logging and analytics
-- 3D dashboard visualization
+- 3D dashboard visualization ([Dashboard Preview](media/dashboard.gif))
 - SSL/TLS support
 - ROS (Robot Operating System) integration
 
@@ -26,9 +26,9 @@ classes/                    # Node.js classes (DataLogger, SensorProcessor)
 config/                     # Configuration files (SSL, etc.)
 phone_sensor_bridge/        # Python ROS package
 public/                     # Frontend (HTML, JS, CSS)
-    client.js, index.html, phone.html
-    css/                    # Stylesheets
-    js/                     # Frontend JS modules
+   client.js, index.html, phone.html
+   css/                    # Stylesheets
+   js/                     # Frontend JS modules
 routes/                     # Node.js route handlers
 sensor_logs/                # Logged sensor data (JSONL)
 views/                      # HTML views for dashboard, analytics, logs
@@ -66,6 +66,7 @@ views/                      # HTML views for dashboard, analytics, logs
   ```bash
   node server.js
   ```
+  ![Server Preview](media/server.gif)
 - To start the Python ROS bridge:
   ```bash
   python3 listen.py
@@ -93,6 +94,8 @@ Run the script:
 ```bash
 python3 preview_mjpeg_stream.py
 ```
+![Phone Preview](media/phone.gif)
+[Phone Video](media/phone.mp4)
 
 ### Regenerating SSL Certificates
 To create new self-signed certificates (with proper SAN):
