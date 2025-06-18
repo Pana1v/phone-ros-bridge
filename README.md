@@ -73,6 +73,7 @@ views/                      # HTML views for dashboard, analytics, logs
   ```bash
   python3 listen.py
   ```
+![ROS 2 Topics](https://github.com/user-attachments/assets/0a18f8c1-0792-43fe-89fd-1a0261b8cd76)
 
 ### Accessing the Dashboard
 Open your browser and go to `https://localhost:PORT/` (replace PORT with your configured port).
