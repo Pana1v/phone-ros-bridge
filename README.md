@@ -1,6 +1,8 @@
 # Phone Sensor Server v1
 
-A server for collecting, processing, and visualizing sensor data from mobile phones. This project supports both Node.js and Python backends, provides a web dashboard, and includes SSL support for secure connections.
+A server for collecting, processing, and visualizing sensor data from mobile phones. This project supports both Node.js and Python backends, provides a web dashboard, and includes SSL support for secure connections, *Part of a cost-effective Perception Stack*, which will include an offline lightweight VLM.
+
+Further details here: https://medium.com/@praajarpit/ros-sensor-bridge-cost-effective-perception-stack-1-4-bfff3e94a65b
 
 ## Features
 - Real-time sensor data collection from mobile devices
