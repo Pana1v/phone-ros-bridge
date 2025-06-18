@@ -10,6 +10,8 @@ A server for collecting, processing, and visualizing sensor data from mobile pho
 - SSL/TLS support
 - ROS (Robot Operating System) integration
 
+Note: Supported Version is ROS Humble, The server component can run on any platform that supports node.js and dependencies
+
 ## Project Structure
 ```
 cert.pem, key.pem           # SSL certificates
