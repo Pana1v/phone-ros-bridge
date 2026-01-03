@@ -18,13 +18,13 @@ Further details here: https://medium.com/@praajarpit/ros-sensor-bridge-cost-effe
 ## Screenshots
 
 ### Dashboard
-![Dashboard](/.gemini/antigravity/brain/35791ddb-b8a0-4819-8fdf-f139dc414009/dashboard_green_black_theme_1767466270349.png)
+![Dashboard](media/dashboard.png)
 
 ### Phone Streamer
-![Phone Streamer](/.gemini/antigravity/brain/35791ddb-b8a0-4819-8fdf-f139dc414009/phone_page_green_black_theme_1767466296422.png)
+![Phone Streamer](media/phone_streamer.png)
 
 ### Analytics
-![Analytics](/.gemini/antigravity/brain/35791ddb-b8a0-4819-8fdf-f139dc414009/analytics_page_green_black_theme_1767466308570.png)
+![Analytics](media/analytics.png)
 
 Note: Supported ROS version is **ROS 2 Humble**. The server component runs on any platform with Node.js.
 
