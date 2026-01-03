@@ -29,7 +29,7 @@ const PORT = 3000;
 // Enhanced error handling for WebSocket frame errors
 process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error.message);
-    if (error.message.includes('Invalid WebSocket frame') || 
+    if (error.message.includes('Invalid WebSocket frame') ||
         error.message.includes('invalid UTF-8 sequence') ||
         error.message.includes('invalid status code') ||
         error.message.includes('data is not defined') ||
@@ -54,7 +54,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Enhanced latency tracking
 const latencyTracker = {
     measurements: [],
-    addMeasurement: function(latency) {
+    addMeasurement: function (latency) {
         this.measurements.push({
             timestamp: Date.now(),
             latency: latency
@@ -63,12 +63,12 @@ const latencyTracker = {
             this.measurements.shift();
         }
     },
-    getAverageLatency: function() {
+    getAverageLatency: function () {
         if (this.measurements.length === 0) return 0;
         const sum = this.measurements.reduce((acc, m) => acc + m.latency, 0);
         return (sum / this.measurements.length).toFixed(2);
     },
-    getStats: function() {
+    getStats: function () {
         if (this.measurements.length === 0) return { avg: 0, min: 0, max: 0 };
         const latencies = this.measurements.map(m => m.latency);
         return {
@@ -96,13 +96,13 @@ function isStrictUTF8(str) {
         const decoder = new TextDecoder('utf-8', { fatal: true });
         const encoded = encoder.encode(str);
         const decoded = decoder.decode(encoded);
-        
+
         if (decoded !== str) return false;
-        
+
         // Method 2: Buffer validation
         const buffer = Buffer.from(str, 'utf8');
         const backToString = buffer.toString('utf8');
-        
+
         return backToString === str;
     } catch (error) {
         return false;
@@ -113,9 +113,9 @@ function deepSanitizeUTF8(obj) {
     if (typeof obj === 'string') {
         // Remove invalid UTF-8 sequences and control characters
         return obj.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Remove control chars
-                  .replace(/[\uFFFE\uFFFF]/g, '') // Remove invalid Unicode
-                  .replace(/[\uD800-\uDFFF]/g, '') // Remove unpaired surrogates
-                  .substring(0, 1000); // Limit length
+            .replace(/[\uFFFE\uFFFF]/g, '') // Remove invalid Unicode
+            .replace(/[\uD800-\uDFFF]/g, '') // Remove unpaired surrogates
+            .substring(0, 1000); // Limit length
     } else if (typeof obj === 'number') {
         return isFinite(obj) ? Number(obj.toFixed(6)) : 0;
     } else if (typeof obj === 'object' && obj !== null) {
@@ -137,13 +137,13 @@ function isValidUTF8(str) {
         const decoder = new TextDecoder('utf-8', { fatal: true });
         const encoded = encoder.encode(str);
         const decoded = decoder.decode(encoded);
-        
+
         if (decoded !== str) return false;
-        
+
         // Check for problematic characters
         const problematicChars = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\uFFFE\uFFFF\uD800-\uDFFF]/;
         if (problematicChars.test(str)) return false;
-        
+
         return true;
     } catch (error) {
         return false;
@@ -154,8 +154,8 @@ function deepSanitizeData(obj) {
     if (typeof obj === 'string') {
         // Remove all problematic characters
         return obj.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\uFFFE\uFFFF\uD800-\uDFFF]/g, '')
-                  .replace(/[^\x20-\x7E\u00A0-\uFFFF]/g, '')
-                  .substring(0, 500);
+            .replace(/[^\x20-\x7E\u00A0-\uFFFF]/g, '')
+            .substring(0, 500);
     } else if (typeof obj === 'number') {
         return isFinite(obj) ? Number(obj.toFixed(6)) : 0;
     } else if (typeof obj === 'object' && obj !== null) {
@@ -170,8 +170,9 @@ function deepSanitizeData(obj) {
 }
 
 // WebSocket Server Setup with enhanced error handling
-const wss = new WebSocket.Server({ 
+const wss = new WebSocket.Server({
     server: server,
+    path: '/ws', // Dedicated path to avoid conflict with Socket.IO
     perMessageDeflate: false, // Disable compression completely
     clientTracking: true,
     maxPayload: 32 * 1024, // 32KB limit
@@ -183,21 +184,24 @@ const wss = new WebSocket.Server({
 const activeConnections = new Map();
 let connectionId = 0;
 
+// Camera frame storage for MJPEG streaming
+let latestCameraFrame = null;
+
 wss.on('connection', (wss, req) => {
     const connId = ++connectionId;
     console.log(`Phone connected via WSS from ${req.socket.remoteAddress} (ID: ${connId})`);
-    
+
     // Store connection info
     activeConnections.set(connId, {
         wss: wss,
         ip: req.socket.remoteAddress,
         connected: Date.now()
     });
-    
+
     // Immediate error handling setup
     wss.on('error', (error) => {
         console.error(`WebSocket connection error (ID: ${connId}):`, error.message);
-        
+
         // Clean up connection
         try {
             activeConnections.delete(connId);
@@ -208,7 +212,7 @@ wss.on('connection', (wss, req) => {
             console.log('Connection cleanup completed');
         }
     });
-    
+
     // Set connection timeout
     const connectionTimeout = setTimeout(() => {
         if (wss.readyState === WebSocket.OPEN) {
@@ -216,27 +220,27 @@ wss.on('connection', (wss, req) => {
             wss.close(1000, 'Timeout');
         }
     }, 300000); // 5 minutes
-    
+
     // FIXED Message handler with enhanced validation and proper scope
     wss.on('message', (message) => {
         let data; // Declare data variable in proper scope
-        
+
         try {
             clearTimeout(connectionTimeout);
-            
+
             // Validate message size first
             if (message.length > 16384) { // 16KB limit
                 console.warn(`Message too large from ID: ${connId}, closing connection`);
                 wss.close(1009, 'Message too large');
                 return;
             }
-            
+
             // Enhanced UTF-8 validation
             let messageString;
             try {
                 if (Buffer.isBuffer(message)) {
                     messageString = message.toString('utf8');
-                    
+
                     // Verify UTF-8 integrity
                     const reEncoded = Buffer.from(messageString, 'utf8');
                     if (!message.equals(reEncoded)) {
@@ -246,18 +250,18 @@ wss.on('connection', (wss, req) => {
                 } else {
                     messageString = message.toString();
                 }
-                
+
                 // Additional UTF-8 validation
                 if (!isValidUTF8(messageString)) {
                     console.warn(`Invalid UTF-8 from ID: ${connId}`);
                     return;
                 }
-                
+
             } catch (utf8Error) {
                 console.warn(`UTF-8 processing error from ID: ${connId}:`, utf8Error.message);
                 return;
             }
-            
+
             // Parse JSON with validation
             try {
                 data = JSON.parse(messageString); // Now data is properly defined in scope
@@ -265,13 +269,13 @@ wss.on('connection', (wss, req) => {
                 console.warn(`JSON parse error from ID: ${connId}:`, parseError.message);
                 return;
             }
-            
+
             // Validate data structure
             if (!data || typeof data !== 'object') {
                 console.warn(`Invalid data structure from ID: ${connId}`);
                 return;
             }
-            
+
             // Handle ping/pong
             if (data.type === 'ping') {
                 if (wss.readyState === WebSocket.OPEN) {
@@ -280,17 +284,25 @@ wss.on('connection', (wss, req) => {
                         timestamp: data.timestamp,
                         serverTime: Date.now()
                     });
-                    
+
                     if (isValidUTF8(response)) {
                         wss.send(response);
                     }
                 }
                 return;
             }
-            
+
             // Handle camera frames (FIXED - NOW PROPERLY INSIDE MESSAGE HANDLER)
             if (data.type === 'cameraFrame') {
                 // console.log('Camera frame received:');
+                // Store for MJPEG streaming
+                latestCameraFrame = {
+                    data: data.data,
+                    timestamp: data.timestamp,
+                    width: data.width,
+                    height: data.height
+                };
+
                 // Broadcast camera frame to all dashboard clients
                 io.emit('cameraFrame', {
                     data: data.data,
@@ -301,39 +313,39 @@ wss.on('connection', (wss, req) => {
                 });
                 return;
             }
-            
-            
+
+
             // Handle latency measurement
             if (data.type === 'latency') {
                 latencyTracker.addMeasurement(data.latency);
                 return;
             }
-            
+
             // Process sensor data with deep sanitization
             const sanitizedData = deepSanitizeData(data);
             const processedData = sensorProcessor.processSensorData(sanitizedData);
-            
+
             latestSensorData = {
                 ...processedData,
                 timestamp: new Date().toISOString(),
                 serverLatency: latencyTracker.getAverageLatency(),
                 connectionId: connId
             };
-            
+
             dataLogger.logSensorData(latestSensorData);
             io.emit('sensorData', latestSensorData);
-            
+
         } catch (error) {
             console.error(`Message processing error from ID: ${connId}:`, error.message);
         }
     });
-    
+
     wss.on('close', (code, reason) => {
         clearTimeout(connectionTimeout);
         activeConnections.delete(connId);
         console.log(`Phone disconnected (ID: ${connId}): ${code} - ${reason || 'No reason'}`);
     });
-    
+
     // Send welcome message with validation
     try {
         if (wss.readyState === WebSocket.OPEN) {
@@ -344,7 +356,7 @@ wss.on('connection', (wss, req) => {
                 maxMessageSize: 16384,
                 serverTime: Date.now()
             });
-            
+
             if (isValidUTF8(welcomeMessage)) {
                 wss.send(welcomeMessage);
             }
@@ -355,34 +367,7 @@ wss.on('connection', (wss, req) => {
 });
 
 // Add this to your server.js
-let latestCameraFrame = null;
 
-// Store latest camera frame from phone
-wss.on('connection', (wss, req) => {
-    wss.on('message', (message) => {
-        try {
-            const data = JSON.parse(message.toString('utf8'));
-            
-            // Store camera frames
-            if (data.type === 'cameraFrame') {
-                latestCameraFrame = {
-                    data: data.data,
-                    timestamp: data.timestamp,
-                    width: data.width,
-                    height: data.height
-                };
-                
-                // Also broadcast to dashboard clients
-                io.emit('cameraFrame', latestCameraFrame);
-                return;
-            }
-            
-            // ... rest of message handling
-        } catch (error) {
-            console.error('Message processing error:', error);
-        }
-    });
-});
 
 // MJPEG Stream Endpoint
 app.get('/camera/stream.mjpg', (req, res) => {
@@ -390,13 +375,13 @@ app.get('/camera/stream.mjpg', (req, res) => {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Access-Control-Allow-Origin', '*');
-    
+
     const sendFrame = () => {
         if (latestCameraFrame && latestCameraFrame.data) {
             try {
                 // Convert base64 to buffer
                 const frameBuffer = Buffer.from(latestCameraFrame.data.split(',')[1], 'base64');
-                
+
                 res.write(`--frame\r\n`);
                 res.write(`Content-Type: image/jpeg\r\n`);
                 res.write(`Content-Length: ${frameBuffer.length}\r\n\r\n`);
@@ -407,15 +392,15 @@ app.get('/camera/stream.mjpg', (req, res) => {
             }
         }
     };
-    
+
     // Send frames at 1 FPS (matching phone's rate)
     const interval = setInterval(sendFrame, 1000);
-    
+
     req.on('close', () => {
         clearInterval(interval);
         console.log('MJPEG client disconnected');
     });
-    
+
     req.on('error', (error) => {
         clearInterval(interval);
         console.error('MJPEG client error:', error);
@@ -442,7 +427,7 @@ app.get('/camera/latest', (req, res) => {
 // Connection monitoring
 setInterval(() => {
     console.log(`Active connections: ${activeConnections.size}`);
-    
+
     // Clean up stale connections
     activeConnections.forEach((conn, id) => {
         if (conn.wss.readyState === WebSocket.CLOSED) {
@@ -460,7 +445,7 @@ wss.on('error', (error) => {
 io.on('connection', (socket) => {
     console.log('Web client connected');
     clients.add(socket);
-    
+
     // Enhanced latency measurement for Socket.IO
     socket.on('ping', (timestamp) => {
         socket.emit('pong', {
@@ -468,12 +453,12 @@ io.on('connection', (socket) => {
             serverTimestamp: Date.now()
         });
     });
-    
+
     // Send latest data to newly connected client
     if (Object.keys(latestSensorData).length > 0) {
         socket.emit('sensorData', latestSensorData);
     }
-    
+
     // Send server stats
     socket.emit('serverStats', {
         connectedClients: clients.size,
@@ -481,7 +466,7 @@ io.on('connection', (socket) => {
         latencyStats: latencyTracker.getStats(),
         uptime: process.uptime()
     });
-    
+
     socket.on('disconnect', () => {
         console.log('Web client disconnected');
         clients.delete(socket);
@@ -499,7 +484,7 @@ setInterval(() => {
             memoryUsage: process.memoryUsage(),
             timestamp: new Date().toISOString()
         };
-        
+
         io.emit('serverStats', stats);
     }
 }, 30000); // Every 30 seconds
@@ -509,29 +494,7 @@ app.use('/api', apiRoutes(sensorProcessor, dataLogger, latencyTracker));
 app.use('/', pageRoutes);
 
 // Camera streaming endpoints
-app.get('/camera/stream.mjpg', (req, res) => {
-    res.setHeader('Content-Type', 'multipart/x-mixed-replace; boundary=frame');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    
-    // Send frames from latest camera data
-    const sendFrame = () => {
-        if (latestSensorData.camera && latestSensorData.camera.lastFrame) {
-            const frameBuffer = Buffer.from(latestSensorData.camera.lastFrame.split(',')[1], 'base64');
-            res.write(`--frame\r\n`);
-            res.write(`Content-Type: image/jpeg\r\n`);
-            res.write(`Content-Length: ${frameBuffer.length}\r\n\r\n`);
-            res.write(frameBuffer);
-            res.write('\r\n');
-        }
-    };
-    
-    const interval = setInterval(sendFrame, 200); // 5 FPS
-    
-    req.on('close', () => {
-        clearInterval(interval);
-    });
-});
+
 
 // Static camera frame endpoint
 app.get('/api/camera/latest', (req, res) => {
@@ -557,7 +520,7 @@ app.get('/api/connections', (req, res) => {
         connected: new Date(conn.connected).toISOString(),
         state: conn.wss.readyState
     }));
-    
+
     res.json({
         totalConnections: activeConnections.size,
         connections: connectionStats,
@@ -588,8 +551,8 @@ app.get('/api/health', (req, res) => {
 // Enhanced error handling middleware
 app.use((err, req, res, next) => {
     console.error('Express server error:', err.message);
-    res.status(500).json({ 
-        error: 'Server Error', 
+    res.status(500).json({
+        error: 'Server Error',
         message: err.message,
         timestamp: new Date().toISOString()
     });
@@ -607,28 +570,28 @@ app.use((req, res) => {
 // Graceful shutdown with cleanup
 process.on('SIGINT', () => {
     console.log('Shutting down gracefully...');
-    
+
     // Flush any pending log data
     dataLogger.flushBuffer();
-    
+
     // Close all WebSocket connections properly
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
             client.close(1000, 'Server shutdown');
         }
     });
-    
+
     // Close Socket.IO connections
     io.close(() => {
         console.log('Socket.IO server closed');
     });
-    
+
     // Close https server
     server.close(() => {
         console.log('https server closed');
         process.exit(0);
     });
-    
+
     // Force exit after 10 seconds
     setTimeout(() => {
         console.log('Force exit after timeout');
@@ -645,7 +608,7 @@ process.on('SIGTERM', () => {
 // Start server with enhanced logging
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 https Server running on https://0.0.0.0:${PORT}`);
-    console.log(`🔒 WSS Server running on wss://0.0.0.0:${PORT}`);
+    console.log(`🔒 WSS Server (phone) running on wss://0.0.0.0:${PORT}/ws`);
     console.log(`📱 Phone: https://192.168.1.11:${PORT}/phone`);
     console.log(`📊 Dashboard: https://192.168.1.11:${PORT}/dashboard`);
     console.log(`📈 Analytics: https://192.168.1.11:${PORT}/analytics`);
